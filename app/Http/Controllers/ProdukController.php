@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Produk;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProdukController extends Controller
 {
@@ -65,52 +66,46 @@ class ProdukController extends Controller
     // update product (handles file replace)
     public function update(Request $request, Produk $produk)
     {
-
-        \Log::info($request->all());
-
         $data = $request->validate([
             'nama_produk' => 'required|string|max:255',
             'kategori' => 'required|string|max:100',
             'deskripsi' => 'required|string',
             'harga' => 'required|numeric|min:0',
-            'gambar' => 'nullable|image|max:2048',
+            'gambar' => 'nullable|image|max:5120',
         ]);
 
-        // Remove gambar from data if no new file was uploaded
-        try {
-            // Handle image upload separately
-            if ($request->hasFile('gambar')) {
-                $file = $request->file('gambar');
-                \Log::info('New image path: ' . $data['gambar']);
+        // handle image manually to avoid FilesystemAdapter fopen('') issue
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
 
-                // Validate file
-                if ($file->isValid()) {
-                    // Delete old image if exists
-                    if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
-                        Storage::disk('public')->delete($produk->gambar);
-                    }
-
-                    // Store new image
-                    $data['gambar'] = $file->store('product-images', 'public');
-
-                    \Log::info('File uploaded: ' . $request->file('gambar')->getClientOriginalName());
-                    \Log::info('Image path stored: ' . $data['gambar']);
-
+            if ($file && $file->isValid() && $file->getRealPath()) {
+                // delete old image if exists
+                if (!empty($produk->gambar) && Storage::disk('public')->exists($produk->gambar)) {
+                    Storage::disk('public')->delete($produk->gambar);
                 }
+
+                // ensure destination folder exists
+                $dest = storage_path('app/public/product-images');
+                if (!is_dir($dest)) {
+                    mkdir($dest, 0755, true);
+                }
+
+                $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $file->move($dest, $filename);
+
+                // store relative path used with asset('storage/...')
+                $data['gambar'] = 'product-images/' . $filename;
+            } else {
+                return back()->withErrors(['gambar' => 'Uploaded image is invalid or temporary file missing.'])->withInput();
             }
-
-            // Remove gambar from data if no new file
-            if (!isset($data['gambar'])) {
-                unset($data['gambar']);
-            }
-
-            $produk->update($data);
-
-            return redirect()->route('product')->with('success', 'Product updated successfully');
-        } catch (\Exception $e) {
-            \Log::info('No file uploaded.');
-            return back()->withErrors(['error' => 'Error uploading image: ' . $e->getMessage()])->withInput();
+        } else {
+            // keep existing image path when no new file uploaded
+            $data['gambar'] = $produk->gambar;
         }
+
+        $produk->update($data);
+
+        return redirect()->route('product')->with('success', 'Product updated.');
     }
     public function destroy(Produk $produk)
     {
