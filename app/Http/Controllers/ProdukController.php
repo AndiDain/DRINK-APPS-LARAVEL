@@ -71,41 +71,14 @@ class ProdukController extends Controller
             'kategori' => 'required|string|max:100',
             'deskripsi' => 'required|string',
             'harga' => 'required|numeric|min:0',
-            'gambar' => 'nullable|image|max:5120',
+            'gambar' => 'nullable|image|max:5120|mimes:jpeg,png,jpg,gif',
         ]);
 
-        // handle image manually to avoid FilesystemAdapter fopen('') issue
-        if ($request->hasFile('gambar')) {
-            $file = $request->file('gambar');
+        // TBD
 
-            if ($file && $file->isValid() && $file->getRealPath()) {
-                // delete old image if exists
-                if (!empty($produk->gambar) && Storage::disk('public')->exists($produk->gambar)) {
-                    Storage::disk('public')->delete($produk->gambar);
-                }
+        // $produk->update($data);
 
-                // ensure destination folder exists
-                $dest = storage_path('app/public/product-images');
-                if (!is_dir($dest)) {
-                    mkdir($dest, 0755, true);
-                }
-
-                $filename = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
-                $file->move($dest, $filename);
-
-                // store relative path used with asset('storage/...')
-                $data['gambar'] = 'product-images/' . $filename;
-            } else {
-                return back()->withErrors(['gambar' => 'Uploaded image is invalid or temporary file missing.'])->withInput();
-            }
-        } else {
-            // keep existing image path when no new file uploaded
-            $data['gambar'] = $produk->gambar;
-        }
-
-        $produk->update($data);
-
-        return redirect()->route('product')->with('success', 'Product updated.');
+        // return redirect()->route('product')->with('success', 'Product updated.');
     }
     public function destroy(Produk $produk)
     {
