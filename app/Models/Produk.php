@@ -19,4 +19,9 @@ class Produk extends Model
         'harga',
         'gambar'
     ];
+
+    public function productCatalogue()
+    {
+        return $this->belongsTo(ProductCatalogue::class, 'kategori', 'kategori');
+    }
 }

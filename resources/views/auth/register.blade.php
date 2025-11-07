@@ -38,7 +38,7 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="mt-2">
+        <div class="mt-2 dark:text-white">
             <p>have an account? <a href="/login" class="text-blue-500 underline">Sign in</a></p>
         </div>
 

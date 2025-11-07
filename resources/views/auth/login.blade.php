@@ -24,7 +24,7 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <div class="mt-2">
+        <div class="mt-2 dark:text-white">
             <p>Dont have an account? <a href="/register" class="text-blue-500 underline">Sign up</a></p>
         </div>
 

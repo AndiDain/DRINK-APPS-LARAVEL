@@ -7,7 +7,7 @@
 
         <title>{{ config('app.name', 'MinumanChan') }}</title>
 
-        {{-- favicon --}}
+        <!-- favicon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('storage/logo/Green_and_Orange_Fun_and_Cute_Fresh_Juice_Drink_Logo-removebg-preview.png') }}">
 
         <!-- Fonts -->
@@ -21,7 +21,7 @@
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
             @include('layouts.navigation')
 
-            <header class="bg-yellow-400 dark:bg-gray-800 shadow">
+            <header class="bg-yellow-400 dark:bg-yellow-500 shadow">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     {{ $header }}
                 </div>

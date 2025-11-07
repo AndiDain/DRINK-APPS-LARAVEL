@@ -1,5 +1,4 @@
 <?php
-// ...existing code...
 
 namespace App\Http\Controllers;
 
@@ -10,20 +9,17 @@ use Illuminate\Support\Str;
 
 class ProdukController extends Controller
 {
-    // ...existing code...
-
     public function show()
     {
         $produk = Produk::all();
         return view('product', compact('produk'));
     }
 
-    public function showdetail()
+    public function showDetail($id)
     {
-        $produk = Produk::all();
+        $produk = Produk::findOrFail($id);
         return view('detail-product', compact('produk'));
     }
-
     // show create form
     public function create()
     {
@@ -57,6 +53,7 @@ class ProdukController extends Controller
 
         return redirect()->route('product')->with('success', 'Product created.');
     }
+
     // optional edit page (not required by modal, but kept)
     public function edit(Produk $produk)
     {
@@ -74,12 +71,34 @@ class ProdukController extends Controller
             'gambar' => 'nullable|image|max:5120|mimes:jpeg,png,jpg,gif',
         ]);
 
-        // TBD
+        // Handle image upload
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
 
-        // $produk->update($data);
+            // Check if file is valid
+            if ($file && $file->isValid()) {
+                // Delete old image if it exists
+                if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
+                    Storage::disk('public')->delete($produk->gambar);
+                }
 
-        // return redirect()->route('product')->with('success', 'Product updated.');
+                // Store new image
+                $path = $file->store('product-image', 'public');
+                $data['gambar'] = $path;
+            } else {
+                return back()->withErrors(['gambar' => 'Uploaded image is invalid.'])->withInput();
+            }
+        } else {
+            // If no new image uploaded, keep existing image by removing it from update data
+            unset($data['gambar']);
+        }
+
+        // UPDATE: This should be OUTSIDE the if block - always update the product
+        $produk->update($data);
+
+        return redirect()->route('product')->with('success', 'Product updated successfully.');
     }
+
     public function destroy(Produk $produk)
     {
         $existing = (string) $produk->gambar;
